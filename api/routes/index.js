@@ -12,7 +12,9 @@ router
 // GET - A hotel
 router
     .route('/hotels/:hotelId')
-        .get(ctrlHotels.hotelsGetOne);
+        .get(ctrlHotels.hotelsGetOne)
+        .put(ctrlHotels.hotelsUpdateOne)
+        .delete(ctrlHotels.hotelsDeleteOne);
 
 
 // GET - All reviews
@@ -25,6 +27,8 @@ router
 // GET - A review
 router
     .route('/hotels/:hotelId/reviews/:reviewId')
-        .get(ctrlReviews.reviewsGetOne);
+        .get(ctrlReviews.reviewsGetOne)
+        .put(ctrlReviews.reviewsUpdateOne)
+        .delete(ctrlReviews.reviewsDeleteOne);
 
 module.exports = router;

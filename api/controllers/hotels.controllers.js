@@ -33,11 +33,6 @@ var runGeoQuery = function (req, res) {
 // Controller function to get all hotel json data
 module.exports.hotelsGetAll = function(req, res) {
 
-    // Get the connection from MongoDB using Mongo NPM package
-    // var db = dbconn.get();
-    // Define a new variable for the specific collection in MongoDB using Mongo NPM Package
-    // var collection = db.collection('hotels');
-
     // Setup and allow searching via queries params
     var offset = 0;
     var count = 5;
@@ -92,52 +87,14 @@ module.exports.hotelsGetAll = function(req, res) {
           }
       });
 
-    // Getting collection date using Mongo NPM package
-    // collection
-    //     .find()
-    //     .skip(offset)
-    //     .limit(count)
-    //     .toArray(function(err, docs) {
-    //         console.log("Found the following hotels: ", docs);
-    //         res
-    //             .status(200)
-    //             .json(docs);
-    //     });
-
-
-    // console.log("db in conroller is working on ", db);
-    //
-    // console.log("GET the hotels");
-    // console.log(req.query);
-    //
-    // var returnData = hotelData.slice(offset, offset + count);
-    //
-    // res
-    //     .status(200)
-    //     .json(returnData);
 };
 
 
 // Controller function to get one hotel json data
 module.exports.hotelsGetOne = function(req, res) {
-    // Get the connection from MongoDB using Mongo NPM package
-    // var db = dbconn.get();
-    // Define a new variable for the specific collection in MongoDB using Mongo NPM Package
-    // var collection = db.collection('hotels');
 
     var hotelId = req.params.hotelId;
-    // var thisHotel = hotelData[hotelId];
     console.log("GET hotelId ", hotelId);
-
-    // Find single document from mongoDB - Using the ObjectId helper from MongoDB from Mongo NPM Package only
-    // collection
-    //     .findOne({
-    //         _id : ObjectId(hotelId)
-    //     }, function(err, doc) {
-    //         res
-    //           .status(200)
-    //           .json(doc);
-    //     });
 
     // Getting from Mongoose Model
     Hotel
@@ -187,7 +144,7 @@ module.exports.hotelsAddOne = function(req, res) {
             photos: _splitArray(req.body.photos),
             currency: req.body.currency,
             location: {
-                location: req.body.address,
+                address: req.body.address,
                 coordinates: [
                     parseFloat(req.body.lng),
                     parseFloat(req.body.lat)
@@ -208,6 +165,83 @@ module.exports.hotelsAddOne = function(req, res) {
             }
         });
 
-
-
 };
+
+// Update the hotel
+module.exports.hotelsUpdateOne = function(req, res) {
+  var hotelId = req.params.hotelId;
+  console.log("GET hotelId ", hotelId);
+
+  // Getting from Mongoose Model
+  Hotel
+      .findById(hotelId)
+      .select("-reviews -rooms")
+      .exec(function(err, doc) {
+          var response = {
+              status: 200,
+              message: doc
+          };
+          if (err) {
+              console.log("Error when finding hotel");
+                response.status = 500;
+                response.message = err;
+          } else if (!doc) {
+                response.status = 404;
+                response.message = {
+                    "message" : "Hotel ID not found"
+                };
+          }
+          if (response.status !== 200) {
+            res
+              .status(response.status)
+              .json(response.message);
+          } else {
+            doc.name = req.body.name;
+            doc.description = req.body.description;
+            doc.stars = parseInt(req.body["stars "], 10);
+            doc.services = _splitArray(req.body.services);
+            doc.photos = _splitArray(req.body.photos);
+            doc.currency = req.body.currency;
+            doc.location = {
+                address: req.body.address,
+                coordinates: [
+                    parseFloat(req.body.lng),
+                    parseFloat(req.body.lat)
+                ]
+            };
+
+            doc.save(function(err, hotelUpdated) {
+                if(err) {
+                  res
+                    .status(500)
+                    .json(err);
+                } else {
+                  res
+                    .status(204)
+                    .json();
+                }
+            });
+
+          }
+
+      });
+};
+
+module.exports.hotelsDeleteOne = function(req, res) {
+  var hotelId = req.params.hotelId;
+
+  Hotel
+    .findByIdAndRemove(hotelId)
+    .exec(function(err, hotel) {
+      if(err) {
+        res
+          .status(404)
+          .json(err);
+      } else {
+        console.log("Hotel by ID deleted " + hotelId);
+        res
+          .status(204)
+          .json();
+      }
+    });
+}

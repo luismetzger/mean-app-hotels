@@ -53,7 +53,7 @@ var _addReview = function(req, res, hotel) {
              .json(err);
         } else {
             res
-              .stsatus(201)
+              .status(201)
               .json(hotelUpdated.reviews[hotelUpdated.reviews.length - 1]);
         }
     });
@@ -95,3 +95,59 @@ module.exports.reviewsAddOne = function(req, res) {
 
         });
 };
+
+// Update review
+// Update the hotel
+module.exports.reviewsUpdateOne = function(req, res) {
+  var hotelId = req.params.hotelId;
+  console.log("GET hotelId ", hotelId);
+
+  // Getting from Mongoose Model
+  Hotel
+      .findById(hotelId)
+      .select("-reviews -rooms")
+      .exec(function(err, thisReview) {
+          var response = {
+              status: 200,
+              message: thisReview
+          };
+          if (err) {
+              console.log("Error when finding hotel");
+                response.status = 500;
+                response.message = err;
+          } else if (!thisReview) {
+                response.status = 404;
+                response.message = {
+                    "message" : "Review ID not found " + reviewId
+                };
+          }
+          if (response.status !== 200) {
+            res
+              .status(response.status)
+              .json(response.message);
+          } else {
+            thisReview.name = req.body.name;
+            thisReview.stars = parseInt(req.body.rating, 10);
+            thisReview.review = req.body.review;
+
+            doc.save(function(err, hotelUpdated) {
+                if(err) {
+                  res
+                    .status(500)
+                    .json(err);
+                } else {
+                  res
+                    .status(204)
+                    .json();
+                }
+            });
+
+          }
+
+      });
+};
+
+
+module.exports.reviewsDeleteOne = function(req, res) {
+
+}
