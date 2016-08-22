@@ -4,6 +4,31 @@
 var mongoose = require('mongoose');
 var Hotel = mongoose.model('Hotel');
 
+var runGeoQuery = function (req, res) {
+    var lng = parseFloat(req.query.lng);
+    var lat = parseFloat(req.query.lat);
+
+    // A geoJSON object
+    var point = {
+        type: "Point",
+        coordinates: [lng, lat]
+    };
+
+    var geoOptions = {
+        spherical: true,
+        maxDistance: 2000,
+        num: 5
+    };
+
+    Hotel
+        .geoNear(point, geoOptions, function(err, results, stats) {
+            console.log('Geo results: ', results);
+            console.log('Geo stats', stats);
+            res
+                .status(200)
+                .json(results);
+        });
+};
 
 // Controller function to get all hotel json data
 module.exports.hotelsGetAll = function(req, res) {
@@ -16,13 +41,38 @@ module.exports.hotelsGetAll = function(req, res) {
     // Setup and allow searching via queries params
     var offset = 0;
     var count = 5;
+    var maxCount = 10;
+
+    if (req.query && req.query.lat & req.query.lng) {
+        runGeoQuery(req, res);
+        return;
+    }
+
     if (req.query && req.query.offset) {
         offset = parseInt(req.query.offset, 10);
     }
     if (req.query && req.query.count) {
         count = parseInt(req.query.count, 10);
     }
+    if (isNaN(offset) || isNaN(count)) {
+        res
+            .status(400)
+            .json({
+                "message": "If supplied in querystring count and offset should be numbers"
+            });
+        return;
+    }
     // end
+
+    // Checks for abuse max number of params allowed. Security so someone doesn't overload our server with query params i.e count=15
+    if (count > maxCount) {
+        res
+          .status(400)
+          .json({
+              "message": "Count limit of " + maxCount + "exceeded"
+          });
+          return;
+    }
 
     // Getting from Mongoose Model
     Hotel
@@ -30,9 +80,16 @@ module.exports.hotelsGetAll = function(req, res) {
       .skip(offset)
       .limit(count)
       .exec(function(err, hotels) {
-          console.log("Found hotels", hotels.length);
-          res
-            .json(hotels);
+          if (err) {
+              console.log("Error when finding hotels");
+              res
+                .status(200)
+                .json(err);
+          } else {
+              console.log("Found hotels", hotels.length);
+              res
+                .json(hotels);
+          }
       });
 
     // Getting collection date using Mongo NPM package
@@ -86,45 +143,71 @@ module.exports.hotelsGetOne = function(req, res) {
     Hotel
         .findById(hotelId)
         .exec(function(err, doc) {
+            var response = {
+                status: 200,
+                message: doc
+            };
+            if (err) {
+                console.log("Error when finding hotel");
+                  response.status = 500;
+                  response.message = err;
+            } else if (!doc) {
+                  response.status = 404;
+                  response.message = {
+                      "message" : "Hotel ID not found"
+                  };
+            }
             res
-              .status(200)
-              .json(doc);
+              .status(response.status)
+              .json(response.message);
+
         });
+};
+
+// Helper function to split an array
+var _splitArray = function(input) {
+    var output;
+    if (input && input.length > 0) {
+        output = input.split(", ");
+    } else {
+        output = [];
+    }
+    return output;
 };
 
 // Controller function to create a new hotel
 module.exports.hotelsAddOne = function(req, res) {
-    // Get the connection from MongoDB
-    var db = dbconn.get();
-    // Define a new variable for the specific collection in MongoDB
-    var collection = db.collection('hotels');
-    // Creating a new empty variable for new hotel
-    var newHotel;
 
-    console.log("POST new hotel");
+    Hotel
+        .create({
+            name: req.body.name,
+            description: req.body.description,
+            stars: parseInt(req.body.stars, 10),
+            services: _splitArray(req.body.services),
+            photos: _splitArray(req.body.photos),
+            currency: req.body.currency,
+            location: {
+                location: req.body.address,
+                coordinates: [
+                    parseFloat(req.body.lng),
+                    parseFloat(req.body.lat)
+                ]
+            }
 
-
-    // Check to confirm all keys have values in body or else return 400 error message
-    if (req.body && req.body.name && req.body.stars) {
-        newHotel = req.body;
-        // Hotel star rating needs to be an integer in my DB, need to convert from string
-        newHotel.stars = parseInt(req.body.stars, 10);
-
-        // Using mongoDB method to POST my newHotel variable to body to DB
-        collection.insertOne(newHotel, function(err, response) {
-            console.log(response);
-            console.log(response.ops);
-            res
-                .status(201)
-                .json(response.ops);
+        }, function(err, hotel) {
+            if(err) {
+                console.log("Error creating model");
+                res
+                  .status(400)
+                  .json(err);
+            } else {
+                console.log("Hotel created", hotel);
+                res
+                  .status(201)
+                  .json(hotel);
+            }
         });
 
-    } else {
-        console.log("Data missing from body of hotelsDB");
-        res
-          .status(400)
-          .json({"message": "Required data missing from body"});
-    }
 
 
 };
