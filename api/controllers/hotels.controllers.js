@@ -1,15 +1,17 @@
-var dbconn = require('../data/dbconnection.js');
-var ObjectId = require('mongodb').ObjectId;
-var hotelData = require('../data/hotel-data.json');
+// var dbconn = require('../data/dbconnection.js');
+// var ObjectId = require('mongodb').ObjectId;
+// var hotelData = require('../data/hotel-data.json');
+var mongoose = require('mongoose');
+var Hotel = mongoose.model('Hotel');
 
 
 // Controller function to get all hotel json data
 module.exports.hotelsGetAll = function(req, res) {
 
-    // Get the connection from MongoDB
-    var db = dbconn.get();
-    // Define a new variable for the specific collection in MongoDB
-    var collection = db.collection('hotels');
+    // Get the connection from MongoDB using Mongo NPM package
+    // var db = dbconn.get();
+    // Define a new variable for the specific collection in MongoDB using Mongo NPM Package
+    // var collection = db.collection('hotels');
 
     // Setup and allow searching via queries params
     var offset = 0;
@@ -18,20 +20,32 @@ module.exports.hotelsGetAll = function(req, res) {
         offset = parseInt(req.query.offset, 10);
     }
     if (req.query && req.query.count) {
-        offset = parseInt(req.query.offset, 10);
+        count = parseInt(req.query.count, 10);
     }
     // end
 
-    collection
-        .find()
-        .skip(offset)
-        .limit(count)
-        .toArray(function(err, docs) {
-            console.log("Found the following hotels: ", docs);
-            res
-                .status(200)
-                .json(docs);
-        });
+    // Getting from Mongoose Model
+    Hotel
+      .find()
+      .skip(offset)
+      .limit(count)
+      .exec(function(err, hotels) {
+          console.log("Found hotels", hotels.length);
+          res
+            .json(hotels);
+      });
+
+    // Getting collection date using Mongo NPM package
+    // collection
+    //     .find()
+    //     .skip(offset)
+    //     .limit(count)
+    //     .toArray(function(err, docs) {
+    //         console.log("Found the following hotels: ", docs);
+    //         res
+    //             .status(200)
+    //             .json(docs);
+    //     });
 
 
     // console.log("db in conroller is working on ", db);
@@ -49,21 +63,29 @@ module.exports.hotelsGetAll = function(req, res) {
 
 // Controller function to get one hotel json data
 module.exports.hotelsGetOne = function(req, res) {
-    // Get the connection from MongoDB
-    var db = dbconn.get();
-    // Define a new variable for the specific collection in MongoDB
-    var collection = db.collection('hotels');
-
+    // Get the connection from MongoDB using Mongo NPM package
+    // var db = dbconn.get();
+    // Define a new variable for the specific collection in MongoDB using Mongo NPM Package
+    // var collection = db.collection('hotels');
 
     var hotelId = req.params.hotelId;
     // var thisHotel = hotelData[hotelId];
     console.log("GET hotelId ", hotelId);
 
-    // Find single document from mongoDB - Using the ObjectId helper from MongoDB
-    collection
-        .findOne({
-            _id : ObjectId(hotelId)
-        }, function(err, doc) {
+    // Find single document from mongoDB - Using the ObjectId helper from MongoDB from Mongo NPM Package only
+    // collection
+    //     .findOne({
+    //         _id : ObjectId(hotelId)
+    //     }, function(err, doc) {
+    //         res
+    //           .status(200)
+    //           .json(doc);
+    //     });
+
+    // Getting from Mongoose Model
+    Hotel
+        .findById(hotelId)
+        .exec(function(err, doc) {
             res
               .status(200)
               .json(doc);
