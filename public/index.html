@@ -1,30 +1,29 @@
 <!DOCTYPE html>
- <html>
+ <html ng-app="MeanHotel">
  	<head>
  		<meta charset="utf-8">
  		<meta http-equiv="X-UA-Compatible" content="IE=edge">
- 		<title>MEAN Hotel</title>
+ 		<title>International Hotels</title>
  		<!-- Use maximum-scale and user-scalable at your own risk. It disables pinch/zoom. Think about usability/accessibility before including.-->
  		<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no" />
  		<!-- Place favicon.ico and apple-touch-icon.png in the root directory -->
+        <link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" type="text/css" rel="stylesheet">
  		<link rel="stylesheet" type="text/css" href="css/bootstrap.css" />
         <link rel="stylesheet" type="text/css" href="css/custom.css" />
  	</head>
  	<body>
- 		<h1>MEAN hotel homepage</h1>
- 		<p>Go ahead and add your content!</p>
 
+
+        <div ng-view></div>
 
 
     <footer class="footer">
         <div class="container">
             <p class="text-muted text-center">
-                <a href="#">
-                    <img class="img-responsive center-block" src="https://unsplash.it/600/30" alt="" />
-                </a>
+
             </p>
             <p class="text-muted text-center">
-                <small>&copy; 2015 MEAN Hotel</small>
+                <small>&copy; 2016 International Hotel</small>
             </p>
         </div>
     </footer>
@@ -32,6 +31,13 @@
 
 
 
- 	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
+    <script src="https://opensource.keycdn.com/angularjs/1.5.8/angular.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.4.0/angular-route.js"></script>
+    <script type="text/javascript" src="./scripts/app.js"></script>
+    <script type="text/javascript" src="./scripts/controllers/main-controller.js"></script>
+    <script type="text/javascript" src="./scripts/controllers/hotel-controller.js"></script>
+    <script type="text/javascript" src="./scripts/dataFactory/dataFactory.js"></script>
+    <script type="text/javascript" src="./scripts/directives/hotel-rating-directive.js"></script>
+
  	</body>
  </html>

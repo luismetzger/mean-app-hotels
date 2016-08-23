@@ -24,6 +24,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // Middleware before routes are rendered that deals with any forms that are POSTED
 app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
 
 // Routes
 app.use('/api', routes);
